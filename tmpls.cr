@@ -5,7 +5,11 @@ require "uri"
 REPO = "enuesaa/tmpls"
 REF  = "main"
 
-record Entry, rel : String, type : Char, linkname : String, mode : Int32, data : Bytes
+record Entry,
+  path : String,
+  dir : Bool,
+  mode : Int32,
+  data : Bytes
 
 def fetch(url : String, limit = 5)
   abort "tmpls: too many redirects" if limit.zero?
@@ -31,15 +35,15 @@ def read_entries(ref : String) : Array(Entry)
 
   Compress::Zip::File.open(body) do |zip|
     zip.entries.each do |e|
-      rel = e.filename.split("/", 2)[1]?
-      next if rel.nil? || rel.empty?
+      path = e.filename.split("/", 2)[1]?
+      next if path.nil? || path.empty?
 
       if e.dir?
-        entries << Entry.new(rel, '5', "", 0o755, Bytes.empty)
+        entries << Entry.new(path: path, dir: true, mode: 0o755, data: Bytes.empty)
       else
         io = IO::Memory.new
         e.open { |f| IO.copy(f, io) }
-        entries << Entry.new(rel, '0', "", 0o644, io.to_slice)
+        entries << Entry.new(path: path, dir: false, mode: 0o644, data: io.to_slice)
       end
     end
   end
@@ -48,9 +52,9 @@ end
 
 def template_names(entries : Array(Entry)) : Array(String)
   entries
-    .map(&.rel)
-    .select { |rel| rel.includes?("/") && !rel.starts_with?(".") }
-    .map { |rel| rel.split("/").first }
+    .map(&.path)
+    .select { |path| path.includes?("/") && !path.starts_with?(".") }
+    .map { |path| path.split("/").first }
     .uniq
     .sort
 end
@@ -103,15 +107,15 @@ end
 
 def extract(entries : Array(Entry), name : String, dest : String)
   prefix = "#{name}/"
-  targets = entries.select { |e| e.rel.starts_with?(prefix) && e.rel != prefix }
+  targets = entries.select { |e| e.path.starts_with?(prefix) && e.path != prefix }
   abort "tmpls: template '#{name}' not found" if targets.empty?
 
   targets.each do |e|
-    sub = e.rel.lchop(prefix)
+    sub = e.path.lchop(prefix)
     abort "tmpls: unsafe path #{sub}" if sub.split("/").includes?("..")
     path = File.join(dest, sub)
 
-    if e.type == '5'
+    if e.dir
       Dir.mkdir_p(path)
     else
       Dir.mkdir_p(File.dirname(path))
