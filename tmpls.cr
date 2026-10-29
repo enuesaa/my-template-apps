@@ -2,15 +2,6 @@ require "http/client"
 require "compress/zip"
 require "uri"
 
-REPO = "enuesaa/tmpls"
-REF  = "main"
-
-record Entry,
-  path : String,
-  dir : Bool,
-  mode : Int32,
-  data : Bytes
-
 def fetch(url : String, limit = 5)
   abort "tmpls: too many redirects" if limit.zero?
   HTTP::Client.get(url) do |res|
@@ -29,8 +20,14 @@ def fetch(url : String, limit = 5)
   end
 end
 
-def read_entries(ref : String) : Array(Entry)
-  body = fetch("https://codeload.github.com/#{REPO}/zip/#{ref}")
+record Entry,
+  path : String,
+  dir : Bool,
+  mode : Int32,
+  data : Bytes
+
+def read_entries : Array(Entry)
+  body = fetch("https://codeload.github.com/enuesaa/tmpls/zip/main")
   entries = [] of Entry
 
   Compress::Zip::File.open(body) do |zip|
@@ -50,7 +47,7 @@ def read_entries(ref : String) : Array(Entry)
   entries
 end
 
-def template_names(entries : Array(Entry)) : Array(String)
+def extract_template_names(entries : Array(Entry)) : Array(String)
   entries
     .map(&.path)
     .select { |path| path.includes?("/") && !path.starts_with?(".") }
@@ -105,7 +102,7 @@ def select_prompt(items : Array(String)) : String
   end
 end
 
-def extract(entries : Array(Entry), name : String, dest : String)
+def expand(entries : Array(Entry), name : String, dest : String)
   prefix = "#{name}/"
   targets = entries.select { |e| e.path.starts_with?(prefix) && e.path != prefix }
   abort "tmpls: template '#{name}' not found" if targets.empty?
@@ -130,10 +127,10 @@ def extract(entries : Array(Entry), name : String, dest : String)
   end
 end
 
-entries = read_entries(REF)
-names = template_names(entries)
+entries = read_entries()
+names = extract_template_names(entries)
 abort "tmpls: no templates found" if names.empty?
 
 name = ARGV.shift? || select_prompt(names)
 dest = ARGV.shift? || "."
-extract(entries, name, dest)
+expand(entries, name, dest)
