@@ -9,5 +9,5 @@ tmpls
 ### Dev
 ```bash
 crystal run tmpls.cr
-crystal build hello.cr --release --no-debug
+crystal build tmpls.cr --release --no-debug
 ```
