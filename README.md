@@ -1,4 +1,4 @@
-# tmpls
+# my-template-apps
 
 ### Usage
 ```bash
