@@ -27,13 +27,13 @@ record Entry,
   data : Bytes
 
 def read_entries : Array(Entry)
-  body = fetch("https://codeload.github.com/enuesaa/tmpls/zip/main")
+  body = fetch("https://github.com/enuesaa/tmpls/releases/latest/download/templates.zip")
   entries = [] of Entry
 
   Compress::Zip::File.open(body) do |zip|
     zip.entries.each do |e|
-      path = e.filename.split("/", 2)[1]?
-      next if path.nil? || path.empty?
+      path = e.filename
+      next if path.empty?
 
       if e.dir?
         entries << Entry.new(path: path, dir: true, mode: 0o755, data: Bytes.empty)
