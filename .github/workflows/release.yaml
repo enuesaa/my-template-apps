@@ -1,0 +1,19 @@
+name: release
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - run: git archive --format=zip -o templates.zip HEAD
+      
+      - run: gh release create "$GITHUB_REF_NAME" templates.zip --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}
