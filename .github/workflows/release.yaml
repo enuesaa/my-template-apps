@@ -1,36 +1,46 @@
 name: release
 on:
   push:
-    tags: ["v*"]
+    tags: ['v*']
 
 permissions:
   contents: write
 
 jobs:
-  build-linux:
-    runs-on: ubuntu-latest
-    container: crystallang/crystal:latest-alpine
+  build:
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-linux-musl
+            runs-on: ubuntu-latest
+            container: crystallang/crystal:latest-alpine
+          - target: aarch64-linux-musl
+            runs-on: ubuntu-24.04-arm
+            container: crystallang/crystal:latest-alpine
+          - target: aarch64-apple-darwin
+            runs-on: macos-latest
+            container: ''
+    runs-on: ${{ matrix.runs-on }}
+    container: ${{ matrix.container }}
     steps:
       - uses: actions/checkout@v4
-      - run: crystal build --release --static tmpls.cr -o tmpls-linux-amd64
-      - uses: actions/upload-artifact@v4
-        with:
-          name: tmpls-linux-amd64
-          path: tmpls-linux-amd64
 
-  build-macos:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: crystal-lang/install-crystal@v1
-      - run: crystal build --release tmpls.cr -o tmpls-darwin-arm64
+      - if: runner.os == 'macOS'
+        uses: crystal-lang/install-crystal@v1
+
+      - run: crystal build --release --static tmpls.cr
+        if: runner.os == 'Linux'
+      - run: crystal build --release tmpls.cr
+        if: runner.os == 'macOS'
+
+      - run: tar -czf tmpls-${{ github.ref_name }}-${{ matrix.target }}.tar.gz tmpls
       - uses: actions/upload-artifact@v4
         with:
-          name: tmpls-darwin-arm64
-          path: tmpls-darwin-arm64
+          name: tmpls-${{ matrix.target }}
+          path: tmpls-*.tar.gz
 
   release:
-    needs: [build-linux, build-macos]
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
