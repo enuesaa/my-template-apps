@@ -25,18 +25,18 @@ jobs:
         run: |
           docker run --rm -v "$PWD":/work -w /work \
             crystallang/crystal:latest-alpine \
-            crystal build --release --static tmpls.cr
+            crystal build --release --static tmpl.cr
 
       - if: runner.os == 'macOS'
         uses: crystal-lang/install-crystal@v1
       - if: runner.os == 'macOS'
-        run: crystal build --release tmpls.cr
+        run: crystal build --release tmpl.cr
 
-      - run: tar -czf tmpls-${{ github.ref_name }}-${{ matrix.target }}.tar.gz tmpls
+      - run: tar -czf tmpl-${{ github.ref_name }}-${{ matrix.target }}.tar.gz tmpl
       - uses: actions/upload-artifact@v4
         with:
-          name: tmpls-${{ matrix.target }}
-          path: tmpls-*.tar.gz
+          name: tmpl-${{ matrix.target }}
+          path: tmpl-*.tar.gz
 
   release:
     needs: build

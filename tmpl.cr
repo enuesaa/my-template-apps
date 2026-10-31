@@ -1,8 +1,8 @@
 require "option_parser"
-require "./tmplslib"
+require "./tmpllib"
 
 parser = OptionParser.new do |p|
-  p.banner = "tmpls"
+  p.banner = "tmpl"
 
   p.on("-h", "--help", "Show help message") do
     puts p
@@ -10,7 +10,7 @@ parser = OptionParser.new do |p|
   end
 
   p.invalid_option do |flag|
-    abort "tmpls: unknown option #{flag}\n\n#{p}"
+    abort "tmpl: unknown option #{flag}\n\n#{p}"
   end
 end
 
@@ -18,7 +18,7 @@ parser.parse
 
 entries = read_entries()
 names = extract_template_names(entries)
-abort "tmpls: no templates found" if names.empty?
+abort "tmpl: no templates found" if names.empty?
 
 name = ARGV.shift? || select_prompt(names)
 dest = ARGV.shift? || name

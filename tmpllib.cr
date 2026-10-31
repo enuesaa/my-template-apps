@@ -3,7 +3,7 @@ require "compress/zip"
 require "uri"
 
 def fetch(url : String, limit = 5)
-  abort "tmpls: too many redirects" if limit.zero?
+  abort "tmpl: too many redirects" if limit.zero?
   HTTP::Client.get(url) do |res|
     case res.status_code
     when 200..299
@@ -12,10 +12,10 @@ def fetch(url : String, limit = 5)
       io.rewind
       return io
     when 300..399
-      loc = res.headers["Location"]? || abort("tmpls: redirect without location")
+      loc = res.headers["Location"]? || abort("tmpl: redirect without location")
       return fetch(URI.parse(url).resolve(loc).to_s, limit - 1)
     else
-      abort "tmpls: failed to fetch #{url} (#{res.status_code})"
+      abort "tmpl: failed to fetch #{url} (#{res.status_code})"
     end
   end
 end
@@ -27,7 +27,7 @@ record Entry,
   data : Bytes
 
 def read_entries : Array(Entry)
-  body = fetch("https://github.com/enuesaa/tmpls/releases/latest/download/templates.zip")
+  body = fetch("https://github.com/enuesaa/my-template-apps/releases/latest/download/templates.zip")
   entries = [] of Entry
 
   Compress::Zip::File.open(body) do |zip|
@@ -105,11 +105,11 @@ end
 def expand(entries : Array(Entry), name : String, dest : String)
   prefix = "#{name}/"
   targets = entries.select { |e| e.path.starts_with?(prefix) && e.path != prefix }
-  abort "tmpls: template '#{name}' not found" if targets.empty?
+  abort "tmpl: template '#{name}' not found" if targets.empty?
 
   targets.each do |e|
     sub = e.path.lchop(prefix)
-    abort "tmpls: unsafe path #{sub}" if sub.split("/").includes?("..")
+    abort "tmpl: unsafe path #{sub}" if sub.split("/").includes?("..")
     path = File.join(dest, sub)
 
     if e.dir

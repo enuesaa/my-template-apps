@@ -1,4 +1,5 @@
 # my-template-apps
+My template apps
 
 ### Usage
 ```bash
