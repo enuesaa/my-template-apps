@@ -13,25 +13,24 @@ jobs:
         include:
           - target: x86_64-linux-musl
             runs-on: ubuntu-latest
-            container: crystallang/crystal:latest-alpine
           - target: aarch64-linux-musl
             runs-on: ubuntu-24.04-arm
-            container: crystallang/crystal:latest-alpine
           - target: aarch64-apple-darwin
             runs-on: macos-latest
-            container: ''
     runs-on: ${{ matrix.runs-on }}
-    container: ${{ matrix.container }}
     steps:
       - uses: actions/checkout@v4
 
+      - if: runner.os == 'Linux'
+        run: |
+          docker run --rm -v "$PWD":/work -w /work \
+            crystallang/crystal:latest-alpine \
+            crystal build --release --static tmpls.cr
+
       - if: runner.os == 'macOS'
         uses: crystal-lang/install-crystal@v1
-
-      - run: crystal build --release --static tmpls.cr
-        if: runner.os == 'Linux'
-      - run: crystal build --release tmpls.cr
-        if: runner.os == 'macOS'
+      - if: runner.os == 'macOS'
+        run: crystal build --release tmpls.cr
 
       - run: tar -czf tmpls-${{ github.ref_name }}-${{ matrix.target }}.tar.gz tmpls
       - uses: actions/upload-artifact@v4
