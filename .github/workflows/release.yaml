@@ -7,13 +7,41 @@ permissions:
   contents: write
 
 jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    container: crystallang/crystal:latest-alpine
+    steps:
+      - uses: actions/checkout@v4
+      - run: crystal build --release --static tmpls.cr -o tmpls-linux-amd64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tmpls-linux-amd64
+          path: tmpls-linux-amd64
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: crystal-lang/install-crystal@v1
+      - run: crystal build --release tmpls.cr -o tmpls-darwin-arm64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tmpls-darwin-arm64
+          path: tmpls-darwin-arm64
+
   release:
+    needs: [build-linux, build-macos]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - run: git archive --format=zip -o templates.zip HEAD
-      
-      - run: gh release create "$GITHUB_REF_NAME" templates.zip --generate-notes
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - run: git archive --format=zip -o dist/templates.zip HEAD
+
+      - run: gh release create "$GITHUB_REF_NAME" dist/* --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}
