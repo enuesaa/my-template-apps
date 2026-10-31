@@ -1,8 +1,15 @@
 require "option_parser"
 require "./tmpllib"
 
+VERSION = {{ env("VERSION") || "unknown" }}
+
 parser = OptionParser.new do |p|
   p.banner = "tmpl"
+
+  p.on("-v", "--version", "Show version") do
+    puts "tmpl #{VERSION}"
+    exit
+  end
 
   p.on("-h", "--help", "Show help message") do
     puts p
