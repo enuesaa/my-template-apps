@@ -102,6 +102,13 @@ def select_prompt(items : Array(String)) : String
   end
 end
 
+def input_prompt(label : String, default : String) : String
+  print "#{label} (#{default}): "
+  line = gets
+  value = line.try(&.strip) || ""
+  value.empty? ? default : value
+end
+
 def expand(entries : Array(Entry), name : String, dest : String)
   prefix = "#{name}/"
   targets = entries.select { |e| e.path.starts_with?(prefix) && e.path != prefix }
