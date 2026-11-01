@@ -17,6 +17,8 @@ jobs:
             runs-on: ubuntu-24.04-arm
           - target: aarch64-apple-darwin
             runs-on: macos-latest
+          - target: x86_64-apple-darwin
+            runs-on: macos-15-intel
     runs-on: ${{ matrix.runs-on }}
     steps:
       - uses: actions/checkout@v7.0.1
@@ -54,6 +56,7 @@ jobs:
           merge-multiple: true
 
       - run: git archive --format=zip -o dist/templates.zip HEAD
+      - run: cd dist && sha256sum *.tar.gz > checksums.txt
 
       - run: gh release create "$GITHUB_REF_NAME" dist/* --generate-notes
         env:
