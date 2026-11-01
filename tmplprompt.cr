@@ -49,8 +49,25 @@ def select_prompt(items : Array(String)) : String
 end
 
 def input_prompt(label : String, default : String) : String
-  print "#{label} (#{default}): "
-  STDOUT.flush
-  value = (gets || "").strip
-  value.empty? ? default : value
+  buffer = default
+
+  loop do
+    print "\r\e[2K#{label}: #{buffer}" # redraw line
+    STDOUT.flush
+
+    byte = STDIN.raw { STDIN.read_byte }
+
+    case byte
+    when nil, 3
+      puts
+      exit 1
+    when 13, 10
+      puts
+      return buffer
+    when 127, 8
+      buffer = buffer.rchop
+    when 32..126
+      buffer += byte.chr.to_s
+    end
+  end
 end

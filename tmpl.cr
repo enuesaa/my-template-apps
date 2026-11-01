@@ -29,5 +29,5 @@ names = extract_template_names(entries)
 abort "tmpl: no templates found" if names.empty?
 
 name = ARGV.shift? || select_prompt(names)
-dest = ARGV.shift? || input_prompt("output", ".")
+dest = ARGV.shift? || input_prompt("output", "./")
 expand(entries, name, dest)
