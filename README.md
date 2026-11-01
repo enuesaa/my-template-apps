@@ -1,14 +1,16 @@
 # my-template-apps
 My template apps
 
-### Usage
-```bash
-brew install enuesaa/tap/tmpls
-tmpls
-```
+## Apps
 
-### Dev
+- Next.js
+- SvelteKit App
+- Cloudflare Workers App
+
+## tmpl
+A CLI for creating apps.
+
 ```bash
-crystal run tmpls.cr
-crystal build tmpls.cr --release --no-debug
+brew install enuesaa/tap/tmpl
+tmpl nextjs .
 ```
