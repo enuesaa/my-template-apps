@@ -1,5 +1,6 @@
 require "option_parser"
 require "./tmpllib"
+require "./tmplprompt"
 
 VERSION = {{ env("VERSION") || "unknown" }}
 
@@ -28,5 +29,5 @@ names = extract_template_names(entries)
 abort "tmpl: no templates found" if names.empty?
 
 name = ARGV.shift? || select_prompt(names)
-dest = ARGV.shift? || input_prompt("output dir", ".")
+dest = ARGV.shift? || input_prompt("output", ".")
 expand(entries, name, dest)
