@@ -1,56 +1,56 @@
-def read_key : String
-  key = ""
+def read_key : Symbol
+  key = :other
+
   STDIN.raw do
-    if b = STDIN.read_byte
-      key = String.build do |io|
-        io.write_byte b
-        if b == 27_u8
-          2.times { if c = STDIN.read_byte; io.write_byte c; end }
-        end
+    case STDIN.read_byte
+    when nil, 3
+      key = :quit
+    when 13, 10
+      key = :enter
+    when 27
+      STDIN.read_byte
+      case STDIN.read_byte
+      when 'A'.ord then key = :up
+      when 'B'.ord then key = :down
       end
     end
   end
+
   key
+end
+
+def draw_menu(items : Array(String), cursor : Int32)
+  items.each_with_index do |item, i|
+    print "\e[2K\r" # clear line
+    puts "#{i == cursor ? "> " : "  "}#{item}"
+  end
 end
 
 def select_prompt(items : Array(String)) : String
   cursor = 0
-  first = true
-  print "\e[?25l"
+  draw_menu(items, cursor)
 
   loop do
-    print "\e[#{items.size}A" unless first
-    first = false
-
-    items.each_with_index do |item, i|
-      print "\e[2K\r"
-      puts i == cursor ? "> #{item}" : "  #{item}"
+    case read_key
+    when :up    then cursor = (cursor - 1) % items.size
+    when :down  then cursor = (cursor + 1) % items.size
+    when :enter then break
+    when :quit  then exit 1
     end
 
-    key = read_key
-    case key
-    when "\e[A", "\eOA", "k" then cursor = (cursor - 1) % items.size
-    when "\e[B", "\eOB", "j" then cursor = (cursor + 1) % items.size
-    when "\r", "\n"
-      selected = items[cursor]
-      print "\e[#{items.size}A\e[2K\r> #{selected}\n"
-      (items.size - 1).times { print "\e[2K\n" }
-      print "\e[#{items.size - 1}A"
-      print "\e[?25h"
-      STDOUT.flush
-      return selected
-    when "\u0003"
-      print "\e[?25h"
-      STDOUT.flush
-      exit 1
-    end
+    print "\e[#{items.size}A" # move up to menu top
+    draw_menu(items, cursor)
   end
+
+  print "\e[#{items.size}A" # move up to menu top
+  print "\e[J"              # clear below
+  puts "> #{items[cursor]}"
+  items[cursor]
 end
 
 def input_prompt(label : String, default : String) : String
   print "#{label} (#{default}): "
   STDOUT.flush
-  line = gets
-  value = line.try(&.strip) || ""
+  value = (gets || "").strip
   value.empty? ? default : value
 end
