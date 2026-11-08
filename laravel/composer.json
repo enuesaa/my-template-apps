@@ -1,6 +1,6 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "enuesaa/laravel-livewire-v4-memos-app",
+    "name": "enuesaa/my-template-apps-laravel",
     "type": "project",
     "description": "",
     "license": "MIT",
@@ -27,8 +27,7 @@
         "setup": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
             "@php artisan key:generate",
-            "@php artisan migrate",
-            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
+            "@php artisan migrate"
         ],
         "format": "pint --preset psr12"
     },
