@@ -4,7 +4,7 @@ require "./tmplprompt"
 
 VERSION = {{ env("VERSION") || "unknown" }}
 
-parser = OptionParser.new do |p|
+OptionParser.parse do |p|
   p.banner = "tmpl"
 
   p.on("-v", "--version", "Show version") do
@@ -21,8 +21,6 @@ parser = OptionParser.new do |p|
     abort "tmpl: unknown option #{flag}\n\n#{p}"
   end
 end
-
-parser.parse
 
 entries = read_entries()
 names = extract_template_names(entries)
