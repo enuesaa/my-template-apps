@@ -1,24 +1,14 @@
-require "http/client"
 require "compress/zip"
-require "uri"
+require "base64"
 
-def fetch(url : String, limit = 5)
-  abort "tmpl: too many redirects" if limit.zero?
-  HTTP::Client.get(url) do |res|
-    case res.status_code
-    when 200..299
-      io = IO::Memory.new
-      IO.copy(res.body_io, io)
-      io.rewind
-      return io
-    when 300..399
-      loc = res.headers["Location"]? || abort("tmpl: redirect without location")
-      return fetch(URI.parse(url).resolve(loc).to_s, limit - 1)
-    else
-      abort "tmpl: failed to fetch #{url} (#{res.status_code})"
-    end
-  end
-end
+{% begin %}
+  {% dirs = "laravel nextjs python svelte workers" %}
+  {% list = "git ls-files -co --exclude-standard -- " + dirs %}
+  {% pack = "zip -q - -@ | base64 | tr -d '\\n'" %}
+  {% zip_b64 = `cd #{__DIR__} && #{list.id} | #{pack.id}` %}
+
+  TEMPLATES_ZIP_B64 = {{ zip_b64.stringify }}
+{% end %}
 
 record Entry,
   path : String,
@@ -27,7 +17,7 @@ record Entry,
   data : Bytes
 
 def read_entries : Array(Entry)
-  body = fetch("https://github.com/enuesaa/my-template-apps/releases/latest/download/templates.zip")
+  body = IO::Memory.new(Base64.decode(TEMPLATES_ZIP_B64))
   entries = [] of Entry
 
   Compress::Zip::File.open(body) do |zip|
