@@ -11,9 +11,9 @@ jobs:
     strategy:
       matrix:
         include:
-          - target: x86_64-linux-musl
+          - target: x86_64-linux
             runs-on: ubuntu-latest
-          - target: aarch64-linux-musl
+          - target: aarch64-linux
             runs-on: ubuntu-24.04-arm
           - target: aarch64-apple-darwin
             runs-on: macos-latest
@@ -23,18 +23,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
 
-      - if: runner.os == 'Linux'
-        env:
-          VERSION: ${{ github.ref_name }}
-        run: |
-          docker run --rm -e VERSION -v "$PWD":/work -w /work \
-            crystallang/crystal:latest-alpine \
-            crystal build --release --static tmpl.cr
-
-      - if: runner.os == 'macOS'
-        uses: crystal-lang/install-crystal@v1.9.5
-      - if: runner.os == 'macOS'
-        env:
+      - uses: crystal-lang/install-crystal@v1.9.5
+      - env:
           VERSION: ${{ github.ref_name }}
         run: crystal build --release tmpl.cr
 
@@ -48,14 +38,11 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7.0.1
-
       - uses: actions/download-artifact@v8.0.2
         with:
           path: dist
           merge-multiple: true
 
-      - run: git archive --format=zip -o dist/templates.zip HEAD
       - run: cd dist && sha256sum *.tar.gz > checksums.txt
 
       - run: gh release create "$GITHUB_REF_NAME" dist/* --generate-notes

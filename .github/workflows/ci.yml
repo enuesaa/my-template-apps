@@ -13,3 +13,4 @@ jobs:
 
       - uses: crystal-lang/install-crystal@v1.9.5
       - run: crystal build tmpl.cr --release --no-debug
+      - run: ./tmpl --version
