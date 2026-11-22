@@ -1,6 +1,5 @@
 record Entry,
   path : String,
-  mode : Int32,
   data : Bytes
 
 ENTRIES = {% begin %}
@@ -8,11 +7,7 @@ ENTRIES = {% begin %}
     {% dirs = "laravel nextjs python svelte workers" %}
     {% files = `cd #{__DIR__} && git ls-files -co --exclude-standard -- #{dirs.id}`.lines %}
     {% for f in files %}
-      Entry.new(
-        path: {{ f }},
-        mode: File.info({{ __DIR__ + "/" + f }}).permissions.value.to_i32,
-        data: {{ read_file(__DIR__ + "/" + f) }}.to_slice,
-      ),
+      Entry.new(path: {{ f }}, data: {{ read_file(__DIR__ + "/" + f) }}.to_slice),
     {% end %}
   ] of Entry
 {% end %}
