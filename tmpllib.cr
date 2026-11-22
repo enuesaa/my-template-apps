@@ -3,7 +3,7 @@ record Entry,
   mode : Int32,
   data : Bytes
 
-TEMPLATE_ENTRIES = {% begin %}
+ENTRIES = {% begin %}
   [
     {% dirs = "laravel nextjs python svelte workers" %}
     {% files = `cd #{__DIR__} && git ls-files -co --exclude-standard -- #{dirs.id}`.lines %}
@@ -17,17 +17,13 @@ TEMPLATE_ENTRIES = {% begin %}
   ] of Entry
 {% end %}
 
-def read_entries : Array(Entry)
-  TEMPLATE_ENTRIES
+def extract_template_names : Array(String)
+  ENTRIES.map { |e| e.path.split("/").first }.uniq.sort
 end
 
-def extract_template_names(entries : Array(Entry)) : Array(String)
-  entries.map { |e| e.path.split("/").first }.uniq.sort
-end
-
-def expand(entries : Array(Entry), name : String, dest : String)
+def expand(name : String, dest : String)
   prefix = "#{name}/"
-  targets = entries.select { |e| e.path.starts_with?(prefix) }
+  targets = ENTRIES.select { |e| e.path.starts_with?(prefix) }
   abort "tmpl: template '#{name}' not found" if targets.empty?
 
   targets.each do |e|
