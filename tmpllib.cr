@@ -1,19 +1,24 @@
 record Entry,
   path : String,
+  mode : Int32,
   data : Bytes
 
-TEMPLATE_FILES = {% begin %}
-  {
+TEMPLATE_ENTRIES = {% begin %}
+  [
     {% dirs = "laravel nextjs python svelte workers" %}
     {% files = `cd #{__DIR__} && git ls-files -co --exclude-standard -- #{dirs.id}`.lines %}
     {% for f in files %}
-      {{ f }} => {{ read_file(__DIR__ + "/" + f) }}.to_slice,
+      Entry.new(
+        path: {{ f }},
+        mode: File.info({{ __DIR__ + "/" + f }}).permissions.value.to_i32,
+        data: {{ read_file(__DIR__ + "/" + f) }}.to_slice,
+      ),
     {% end %}
-  } of String => Bytes
+  ] of Entry
 {% end %}
 
 def read_entries : Array(Entry)
-  TEMPLATE_FILES.map { |path, data| Entry.new(path: path, data: data) }
+  TEMPLATE_ENTRIES
 end
 
 def extract_template_names(entries : Array(Entry)) : Array(String)
